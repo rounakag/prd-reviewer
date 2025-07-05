@@ -1,27 +1,33 @@
-from flask import Flask, render_template, request, jsonify
-from flask_cors import CORS
-import os
+@app.route('/review', methods=['POST'])
+def review():
+    data = request.get_json()
+    prd_text = data.get('prd_text', '')
 
-app = Flask(__name__)
-CORS(app)
+    if not prd_text.strip():
+        return jsonify({'error': 'No PRD text provided'}), 400
 
-@app.route("/")
-def index():
-    return render_template("index.html")
+    # TEMP MOCK response (replace with Gemini API call later)
+    dummy_response = """
+**1. Summary:** This PRD describes the integration of payments.
 
-@app.route("/analyze", methods=["POST"])
-def analyze():
-    prd_text = request.json.get("prd_text", "")
-    # Simulate AI response for now
-    response = {
-        "clarity": 4,
-        "structure": 3,
-        "completeness": 5,
-        "ambiguity": 2,
-        "stakeholder": 3,
-        "summary": "PRD is mostly complete with a few areas for improvement."
-    }
-    return jsonify(response)
+**2. Scores**
+**Clarity:** 4
+**Structure:** 3
+**Completeness:** 5
+**Ambiguity:** 2
+**Stakeholder Consideration:** 4
+**Technical Depth:** 3
+**Feasibility:** 5
+**Business Impact Alignment:** 4
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+**3. Strengths and Areas for Improvement:**
+
+**Strengths:**
+- **Clarity:** Clear objective stated at the beginning.
+- **Completeness:** Covers key user journeys.
+
+**Areas for Improvement:**
+- **Ambiguity:** Some terms are vague and need definition.
+- **Structure:** Lacks proper sectioning (e.g. user stories, edge cases).
+"""
+    return jsonify({"response": dummy_response})
