@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PRD Reviewer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <div class="max-w-4xl mx-auto mt-10 text-center">
+    <h1 class="text-3xl font-bold text-blue-700 mb-2">📄 PRD Reviewer</h1>
+    <p class="text-gray-600">AI-powered analysis tool for Product Requirement Documents</p>
+  </div>
+
+  <!-- Upload Section -->
+  <section class="max-w-xl mx-auto bg-white p-6 rounded-2xl shadow border border-gray-200 mt-10">
+    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+      <span class="text-blue-600">📝</span> Document Details
+    </h2>
+
+    <div class="mb-4">
+      <label for="prdTitle" class="block text-sm font-medium text-gray-700">PRD Title</label>
+      <input id="prdTitle" type="text" placeholder="Enter your PRD title..." class="mt-1 w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    </div>
+
+    <div class="border-2 border-dashed border-blue-400 rounded-xl py-10 flex flex-col items-center justify-center text-center hover:bg-blue-50 transition">
+      <label for="prdFileInput" class="cursor-pointer">
+        <svg class="w-12 h-12 mx-auto mb-2 text-blue-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        <p class="text-blue-600 font-medium">Drop your PRD here or click to browse</p>
+        <p class="text-sm text-gray-500 mt-1">Supports PDF, DOCX, and TXT files</p>
+      </label>
+      <input id="prdFileInput" type="file" class="hidden" />
+    </div>
+
+    <p id="uploadStatus" class="text-sm text-gray-600 mt-3"></p>
+    <button id="submitBtn" onclick="reviewPRD()" class="mt-6 w-full bg-blue-600 text-white py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-50">
+      Submit
+    </button>
+  </section>
+
+  <!-- Output Section -->
+  <section id="resultSection" class="max-w-6xl mx-auto mt-10 hidden px-4 space-y-8">
+
+    <!-- Summary -->
+    <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
+      <h3 class="text-xl font-semibold text-blue-800 mb-2">🧾 PRD Summary</h3>
+      <p id="summaryOutput" class="text-sm text-gray-700 whitespace-pre-line"></p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Chart and Scores -->
+      <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
+        <h3 class="text-xl font-semibold mb-4">📊 Score Breakdown</h3>
+        <p id="overallScore" class="text-sm font-semibold text-gray-800 mb-3"></p>
+        <canvas id="scoreChart" height="300"></canvas>
+        <div id="scoreBreakdown" class="mt-4 space-y-1 text-sm text-gray-700"></div>
+      </div>
+
+      <!-- Strengths and Improvements -->
+      <div class="space-y-6">
+        <div class="bg-white p-6 rounded-xl shadow border border-green-200">
+          <h3 class="text-xl font-semibold text-green-700 mb-2">✅ Strengths</h3>
+          <ul id="strengthsList" class="list-disc list-inside text-sm text-gray-700 marker:text-green-600"></ul>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow border border-orange-200">
+          <h3 class="text-xl font-semibold text-orange-700 mb-2">⚠️ Areas for Improvement</h3>
+          <ul id="improvementList" class="list-disc list-inside text-sm text-gray-700 marker:text-orange-600"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
