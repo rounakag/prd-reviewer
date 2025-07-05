@@ -15,9 +15,8 @@ def home():
 @app.route('/review', methods=['POST'])
 def review():
     data = request.get_json()
-    prd_text = data.get('prd_text', '')  # ✅ match frontend key
+    prd_text = data.get('prd_text', '')
 
-    # ✅ Dummy Gemini-like response
     dummy_response = """
 **1. Summary:** This PRD outlines a feature for enabling bookmarks on articles.
 
@@ -42,9 +41,8 @@ def review():
 - **Ambiguity:** Some flow details are vague.
 - **No Metrics:** Missing measurement criteria.
 """
-
     return jsonify({"response": dummy_response})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port)
