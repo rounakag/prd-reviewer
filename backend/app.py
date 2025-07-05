@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import requests
 import os
@@ -6,12 +6,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 print("Loaded GEMINI_API_KEY:", GEMINI_API_KEY)
 
+# 🔹 Serve the frontend
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+# 🔸 PRD Review API
 @app.route("/review", methods=["POST"])
 def review_prd():
     data = request.json
