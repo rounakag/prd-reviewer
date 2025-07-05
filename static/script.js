@@ -55,7 +55,7 @@ async function reviewPRD() {
   const response = await fetch("https://prd-reviewer.onrender.com/review", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title: prdTitle, text: prdText }),
+    body: JSON.stringify({ prd_text: prdText })  // ✅ FIXED HERE
   });
 
   const data = await response.json();
@@ -76,7 +76,6 @@ async function reviewPRD() {
   const summaryMatch = text.match(/\*\*1\. Summary:\*\*\s*(.*?)(?=\n\s*\*\*2\.|$)/s);
   document.getElementById("summaryOutput").innerText = summaryMatch ? summaryMatch[1].trim() : "Not available";
 
-
   // Strengths & Improvements (new format)
   const saMatch = text.match(/\*\*3\. Strengths and Areas for Improvement:\*\*([\s\S]*)/);
 
@@ -92,7 +91,6 @@ async function reviewPRD() {
     document.getElementById("improvementList").innerHTML = improvementsMatch
       ? formatBullets(improvementsMatch[1], "amber")
       : "<li>No improvements found</li>";
-
   } else {
     document.getElementById("strengthsList").innerHTML = "<li>No strengths found</li>";
     document.getElementById("improvementList").innerHTML = "<li>No improvements found</li>";
