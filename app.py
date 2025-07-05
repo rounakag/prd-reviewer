@@ -15,10 +15,11 @@ def home():
 @app.route('/review', methods=['POST'])
 def review():
     data = request.get_json()
-    prd_text = data.get('prd_text', '')
+    prd_text = data.get('prd_text', '')  # ✅ match frontend key
 
+    # ✅ Dummy Gemini-like response
     dummy_response = """
-**1. Summary:** This PRD describes a feature to allow users to bookmark articles.
+**1. Summary:** This PRD outlines a feature for enabling bookmarks on articles.
 
 **2. Scores**
 **Clarity:** 4  
@@ -33,15 +34,16 @@ def review():
 **3. Strengths and Areas for Improvement:**
 
 **Strengths:**
-- **Clear Intent:** The objective is clearly stated.
-- **User Benefit:** Helps users easily save useful articles.
+- **Clear Objective:** Clear articulation of intent.
+- **User Value:** Strong benefit for readers.
 
 **Areas for Improvement:**
-- **Missing Tech Detail:** No architecture or flow.
-- **Ambiguity:** Some steps aren't clearly explained.
-- **Metrics:** No success criteria defined.
+- **Lacks Technical Details:** No implementation guidance.
+- **Ambiguity:** Some flow details are vague.
+- **No Metrics:** Missing measurement criteria.
 """
-    return jsonify({ "response": dummy_response })
+
+    return jsonify({"response": dummy_response})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
