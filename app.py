@@ -15,39 +15,33 @@ def home():
 @app.route('/review', methods=['POST'])
 def review():
     data = request.get_json()
-    prd_title = data.get('title', '')
-    prd_text = data.get('text', '')
+    prd_text = data.get('prd_text', '')
 
-    if not prd_text.strip():
-        return jsonify({'error': 'No PRD text provided'}), 400
-
-    # Dummy response mimicking Gemini output
     dummy_response = """
-**1. Summary:** This PRD outlines the onboarding flow for new users to the platform, highlighting key screens, stakeholders, and success metrics.
+**1. Summary:** This PRD describes a feature to allow users to bookmark articles.
 
 **2. Scores**
-**Clarity:** 4
-**Structure:** 3
-**Completeness:** 5
-**Ambiguity:** 2
-**Stakeholder Consideration:** 4
-**Technical Depth:** 3
-**Feasibility:** 5
-**Business Impact Alignment:** 4
+**Clarity:** 4  
+**Structure:** 5  
+**Completeness:** 3  
+**Ambiguity:** 2  
+**Stakeholder Consideration:** 4  
+**Technical Depth:** 2  
+**Feasibility:** 3  
+**Business Impact Alignment:** 4  
 
 **3. Strengths and Areas for Improvement:**
 
 **Strengths:**
-- **Clarity:** Clearly states the goal and target audience.
-- **Completeness:** Covers screens and metrics in detail.
+- **Clear Intent:** The objective is clearly stated.
+- **User Benefit:** Helps users easily save useful articles.
 
 **Areas for Improvement:**
-- **Ambiguity:** Some parts like "flexible logic" need definition.
-- **Structure:** Could benefit from sections on risks or edge cases.
+- **Missing Tech Detail:** No architecture or flow.
+- **Ambiguity:** Some steps aren't clearly explained.
+- **Metrics:** No success criteria defined.
 """
-
-    return jsonify({"response": dummy_response})
-
+    return jsonify({ "response": dummy_response })
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
