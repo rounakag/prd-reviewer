@@ -1,44 +1,72 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+import google.generativeai as genai
 
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-genai.configure(api_key=GOOGLE_API_KEY)
+# Configure Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY not set in environment variables.")
 
+genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-pro")
 
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
 
 @app.route("/review", methods=["POST"])
 def review():
-    data = request.get_json()
-    prd_text = data.get("prd_text", "")
+    try:
+        data = request.get_json()
+        prd_text = data.get("prd_text", "").strip()
 
-    prompt = f"""
-You're an expert product manager. Analyze the following PRD and provide:
-1. Summary
-2. Scores (Clarity, Structure, Completeness, Ambiguity, Stakeholder Consideration, Technical Depth, Feasibility, Business Impact Alignment) from 1 to 5.
-3. Strengths and Areas for Improvement.
+        if not prd_text:
+            return jsonify({"response": "No PRD text provided."}), 400
+
+        prompt = f"""
+You are a senior product reviewer AI. Analyze the PRD below and respond in this format:
+
+**1. Summary:** [One-paragraph summary]
+
+**2. Scores**  
+**Clarity:** x  
+**Structure:** x  
+**Completeness:** x  
+**Ambiguity:** x  
+**Stakeholder Consideration:** x  
+**Technical Depth:** x  
+**Feasibility:** x  
+**Business Impact Alignment:** x  
+
+**3. Strengths and Areas for Improvement:**
+
+**Strengths:**  
+- [bullet 1]  
+- [bullet 2]  
+
+**Areas for Improvement:**  
+- [bullet 1]  
+- [bullet 2]  
 
 PRD:
 \"\"\"
 {prd_text}
 \"\"\"
-"""
+        """
 
-    try:
         response = model.generate_content(prompt)
-        return jsonify({"response": response.text})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
-# ❌ Don't add app.run() here. Render uses Gunicorn and wsgi.py
+        if hasattr(response, "text") and response.text:
+            return jsonify({"response": response.text})
+        else:
+            return jsonify({"response": "No response generated from Gemini."}), 500
+
+    except Exception as e:
+        return jsonify({"response": f"Error occurred: {str(e)}"}), 500
