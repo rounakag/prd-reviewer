@@ -11,7 +11,9 @@ CORS(app)
 
 # Configure Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-pro")
+
+# Create Gemini model
+model = genai.GenerativeModel(model_name="models/gemini-pro")
 
 @app.route("/")
 def home():
@@ -24,7 +26,7 @@ def review():
         prd_text = data.get("prd_text", "").strip()
 
         if not prd_text:
-            return jsonify({"response": "❌ No PRD text provided."}), 400
+            return jsonify({"response": "No PRD text provided."}), 400
 
         prompt = f"""
 You are a senior product reviewer AI. Analyze the PRD below and respond in this format:
@@ -57,18 +59,15 @@ PRD:
 \"\"\"
         """
 
-        response = model.generate_content(prompt)
+        # Gemini expects prompt as a list of parts
+        response = model.generate_content([prompt])
+        print("✅ Gemini Response:", response.text)
 
-        # ✅ Log full Gemini response for debugging
-        print("🔍 Gemini Raw Response:\n", response)
-
-        if response and hasattr(response, "text") and response.text:
-            print("✅ Gemini Final Text:\n", response.text)
+        if response.text:
             return jsonify({"response": response.text})
         else:
-            print("❌ Empty response from Gemini")
-            return jsonify({"response": "❌ No response generated from Gemini."}), 500
+            return jsonify({"response": "No response generated from Gemini."}), 500
 
     except Exception as e:
-        print(f"🔥 Exception: {str(e)}")
-        return jsonify({"response": f"❌ Error occurred: {str(e)}"}), 500
+        print("🔥 Exception:", str(e))
+        return jsonify({"response": f"Error occurred: {str(e)}"}), 500
