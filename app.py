@@ -1,23 +1,10 @@
-from flask import Flask, render_template, request, jsonify
-from flask_cors import CORS
-import os
-from dotenv import load_dotenv
 import google.generativeai as genai
 
-load_dotenv()
-
-app = Flask(__name__, static_folder='static', template_folder='templates')
-CORS(app)
-
-# Configure Gemini
+# Load API key
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Create Gemini model
-model = genai.GenerativeModel(model_name="models/gemini-pro")
-
-@app.route("/")
-def home():
-    return render_template("index.html")
+# Correct model name
+model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
 
 @app.route("/review", methods=["POST"])
 def review():
@@ -59,8 +46,7 @@ PRD:
 \"\"\"
         """
 
-        # Gemini expects prompt as a list of parts
-        response = model.generate_content([prompt])
+        response = model.generate_content(prompt)
         print("✅ Gemini Response:", response.text)
 
         if response.text:
@@ -69,5 +55,5 @@ PRD:
             return jsonify({"response": "No response generated from Gemini."}), 500
 
     except Exception as e:
-        print("🔥 Exception:", str(e))
+        print("🔥 Error:", str(e))
         return jsonify({"response": f"Error occurred: {str(e)}"}), 500
