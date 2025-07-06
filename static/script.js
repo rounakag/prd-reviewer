@@ -1,4 +1,5 @@
 let prdText = "";
+let currentAnalysis = null;
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js";
 
@@ -55,7 +56,7 @@ async function reviewPRD() {
     return;
   }
 
-  uploadStatus.textContent = "Analyzing...";
+  uploadStatus.textContent = "🔍 Analyzing PRD with AI...";
   submitBtn.disabled = true;
 
   try {
@@ -83,6 +84,7 @@ async function reviewPRD() {
     let parsed;
     try {
       parsed = JSON.parse(responseText);
+      currentAnalysis = parsed; // Store for template generation
     } catch (parseError) {
       console.error("JSON Parse Error:", parseError);
       console.error("Cleaned response:", responseText);
@@ -100,33 +102,16 @@ async function reviewPRD() {
 
     // Display results
     document.getElementById("resultSection").classList.remove("hidden");
-    uploadStatus.textContent = "Analysis complete.";
+    uploadStatus.textContent = "✅ Analysis complete!";
 
-    const scores = [
-      { dimension: "Clarity", score: parsed.scores.clarity },
-      { dimension: "Structure", score: parsed.scores.structure },
-      { dimension: "Completeness", score: parsed.scores.completeness },
-      { dimension: "Ambiguity", score: parsed.scores.ambiguity },
-      { dimension: "Stakeholder Consideration", score: parsed.scores.stakeholder_consideration },
-      { dimension: "Technical Depth", score: parsed.scores.technical_depth },
-      { dimension: "Feasibility", score: parsed.scores.feasibility },
-      { dimension: "Business Impact Alignment", score: parsed.scores.business_impact_alignment }
-    ].map(s => ({ ...s, fullMark: 10 }));
-
-    renderChart(scores);
-    renderBreakdown(scores);
-
-    const avg = (scores.reduce((sum, s) => sum + s.score, 0) / scores.length).toFixed(1);
-    document.getElementById("overallScore").textContent = `🧮 Overall Score: ${avg}/10`;
-    document.getElementById("summaryOutput").innerText = parsed.summary;
-
-    document.getElementById("strengthsList").innerHTML = parsed.strengths && parsed.strengths.length
-      ? parsed.strengths.map(s => `<li style="color: #22c55e">${s}</li>`).join("")
-      : "<li>No strengths found</li>";
-
-    document.getElementById("improvementList").innerHTML = parsed.areas_for_improvement && parsed.areas_for_improvement.length
-      ? parsed.areas_for_improvement.map(p => `<li style="color: #f59e0b">${p}</li>`).join("")
-      : "<li>No improvements found</li>";
+    // Render all sections
+    renderSummarySection(parsed);
+    renderScoreSection(parsed);
+    renderStrengthsAndImprovements(parsed);
+    renderMissingSections(parsed);
+    renderActionItems(parsed);
+    renderRiskAssessment(parsed);
+    renderMetadata(parsed);
 
     submitBtn.disabled = false;
 
@@ -135,6 +120,208 @@ async function reviewPRD() {
     uploadStatus.textContent = "⚠️ Error analyzing PRD";
     submitBtn.disabled = false;
   }
+}
+
+function renderSummarySection(parsed) {
+  document.getElementById("summaryOutput").innerText = parsed.summary;
+
+  // Add PRD type and complexity badges
+  const metadataDiv = document.getElementById("prdMetadata");
+  metadataDiv.innerHTML = `
+    <div class="flex gap-2 mb-4">
+      <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+        ${parsed.prd_type || 'General'}
+      </span>
+      <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+        ${parsed.estimated_complexity || 'Medium'} Complexity
+      </span>
+    </div>
+  `;
+}
+
+function renderScoreSection(parsed) {
+  const scores = [
+    { dimension: "Clarity", score: parsed.scores.clarity },
+    { dimension: "Structure", score: parsed.scores.structure },
+    { dimension: "Completeness", score: parsed.scores.completeness },
+    { dimension: "Ambiguity", score: parsed.scores.ambiguity },
+    { dimension: "Stakeholder Consideration", score: parsed.scores.stakeholder_consideration },
+    { dimension: "Technical Depth", score: parsed.scores.technical_depth },
+    { dimension: "Feasibility", score: parsed.scores.feasibility },
+    { dimension: "Business Impact Alignment", score: parsed.scores.business_impact_alignment }
+  ].map(s => ({ ...s, fullMark: 10 }));
+
+  renderChart(scores);
+  renderBreakdown(scores);
+
+  const avg = (scores.reduce((sum, s) => sum + s.score, 0) / scores.length).toFixed(1);
+  const avgColor = avg >= 8 ? 'text-green-600' : avg >= 6 ? 'text-yellow-600' : 'text-red-600';
+  document.getElementById("overallScore").innerHTML = `
+    <span class="text-2xl font-bold ${avgColor}">${avg}/10</span>
+    <span class="text-gray-600 ml-2">Overall Score</span>
+  `;
+}
+
+function renderStrengthsAndImprovements(parsed) {
+  document.getElementById("strengthsList").innerHTML = parsed.strengths && parsed.strengths.length
+    ? parsed.strengths.map(s => `<li class="flex items-start gap-2 mb-2"><span class="text-green-500 mt-1">✅</span><span>${s}</span></li>`).join("")
+    : "<li>No strengths identified</li>";
+
+  document.getElementById("improvementList").innerHTML = parsed.areas_for_improvement && parsed.areas_for_improvement.length
+    ? parsed.areas_for_improvement.map(p => `<li class="flex items-start gap-2 mb-2"><span class="text-amber-500 mt-1">⚠️</span><span>${p}</span></li>`).join("")
+    : "<li>No improvements identified</li>";
+}
+
+function renderMissingSections(parsed) {
+  const missingSectionsDiv = document.getElementById("missingSections");
+  if (parsed.missing_sections && parsed.missing_sections.length > 0) {
+    missingSectionsDiv.innerHTML = parsed.missing_sections.map(section => `
+      <div class="border-l-4 border-red-400 pl-4 py-2 mb-3">
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-red-700">${section.section}</span>
+          <span class="px-2 py-1 text-xs rounded ${
+            section.importance === 'High' ? 'bg-red-100 text-red-800' :
+            section.importance === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-gray-100 text-gray-800'
+          }">${section.importance}</span>
+        </div>
+        <p class="text-sm text-gray-600 mt-1">${section.description}</p>
+      </div>
+    `).join("");
+  } else {
+    missingSectionsDiv.innerHTML = "<p class='text-green-600'>🎉 All essential sections are present!</p>";
+  }
+}
+
+function renderActionItems(parsed) {
+  const actionItemsDiv = document.getElementById("actionItems");
+  if (parsed.action_items && parsed.action_items.length > 0) {
+    actionItemsDiv.innerHTML = parsed.action_items.map(item => `
+      <div class="border border-gray-200 rounded-lg p-4 mb-3">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <h4 class="font-medium text-gray-900">${item.task}</h4>
+            <div class="flex items-center gap-4 mt-2 text-sm text-gray-600">
+              <span class="flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full ${
+                  item.priority === 'High' ? 'bg-red-500' :
+                  item.priority === 'Medium' ? 'bg-yellow-500' :
+                  'bg-green-500'
+                }"></span>
+                ${item.priority} Priority
+              </span>
+              <span>👤 ${item.owner}</span>
+              <span>⏱️ ${item.effort}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  } else {
+    actionItemsDiv.innerHTML = "<p class='text-gray-600'>No specific action items identified.</p>";
+  }
+}
+
+function renderRiskAssessment(parsed) {
+  const riskDiv = document.getElementById("riskAssessment");
+  if (parsed.risk_assessment) {
+    const risks = parsed.risk_assessment;
+    riskDiv.innerHTML = `
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <h4 class="font-medium text-red-700 mb-2">🔧 Technical Risks</h4>
+          <ul class="text-sm space-y-1">
+            ${risks.technical_risks?.map(risk => `<li>• ${risk}</li>`).join('') || '<li>No technical risks identified</li>'}
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium text-orange-700 mb-2">💼 Business Risks</h4>
+          <ul class="text-sm space-y-1">
+            ${risks.business_risks?.map(risk => `<li>• ${risk}</li>`).join('') || '<li>No business risks identified</li>'}
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium text-blue-700 mb-2">⏰ Timeline Risks</h4>
+          <ul class="text-sm space-y-1">
+            ${risks.timeline_risks?.map(risk => `<li>• ${risk}</li>`).join('') || '<li>No timeline risks identified</li>'}
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium text-green-700 mb-2">🛡️ Mitigation Suggestions</h4>
+          <ul class="text-sm space-y-1">
+            ${risks.mitigation_suggestions?.map(suggestion => `<li>• ${suggestion}</li>`).join('') || '<li>No specific mitigations suggested</li>'}
+          </ul>
+        </div>
+      </div>
+    `;
+  } else {
+    riskDiv.innerHTML = "<p class='text-gray-600'>No risk assessment available.</p>";
+  }
+}
+
+function renderMetadata(parsed) {
+  const templateBtn = document.getElementById("generateTemplateBtn");
+  if (parsed.recommended_template) {
+    templateBtn.style.display = 'block';
+    templateBtn.onclick = () => generateTemplate();
+  }
+}
+
+async function generateTemplate() {
+  if (!currentAnalysis) return;
+
+  const templateBtn = document.getElementById("generateTemplateBtn");
+  const originalText = templateBtn.textContent;
+  templateBtn.textContent = "Generating...";
+  templateBtn.disabled = true;
+
+  try {
+    const response = await fetch("/generate-template", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prd_analysis: currentAnalysis }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Show template in modal
+    showTemplateModal(data.template);
+
+  } catch (error) {
+    console.error("Error generating template:", error);
+    alert("Error generating template. Please try again.");
+  } finally {
+    templateBtn.textContent = originalText;
+    templateBtn.disabled = false;
+  }
+}
+
+function showTemplateModal(template) {
+  const modal = document.getElementById("templateModal");
+  const templateContent = document.getElementById("templateContent");
+
+  templateContent.textContent = template;
+  modal.classList.remove("hidden");
+}
+
+function closeTemplateModal() {
+  document.getElementById("templateModal").classList.add("hidden");
+}
+
+function copyTemplate() {
+  const templateContent = document.getElementById("templateContent");
+  navigator.clipboard.writeText(templateContent.textContent).then(() => {
+    const copyBtn = document.getElementById("copyTemplateBtn");
+    const originalText = copyBtn.textContent;
+    copyBtn.textContent = "Copied!";
+    setTimeout(() => {
+      copyBtn.textContent = originalText;
+    }, 2000);
+  });
 }
 
 function renderChart(scores) {
@@ -150,14 +337,24 @@ function renderChart(scores) {
         backgroundColor: 'rgba(59, 130, 246, 0.2)',
         borderColor: '#3B82F6',
         borderWidth: 2,
-        pointBackgroundColor: '#2563EB'
+        pointBackgroundColor: '#2563EB',
+        pointBorderColor: '#1E40AF',
+        pointRadius: 5
       }]
     },
     options: {
       scales: {
         r: {
           beginAtZero: true,
-          max: 10
+          max: 10,
+          ticks: {
+            stepSize: 2
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
         }
       }
     }
@@ -168,7 +365,19 @@ function renderBreakdown(scores) {
   const breakdown = document.getElementById("scoreBreakdown");
   breakdown.innerHTML = "";
   scores.forEach(score => {
-    const emoji = score.score >= 8 ? "🔥" : score.score >= 5 ? "⚠️" : "❌";
-    breakdown.innerHTML += `<div>${emoji} <strong>${score.dimension}</strong>: ${score.score}/10</div>`;
+    const percentage = (score.score / 10) * 100;
+    const color = score.score >= 8 ? 'bg-green-500' : score.score >= 6 ? 'bg-yellow-500' : 'bg-red-500';
+
+    breakdown.innerHTML += `
+      <div class="flex items-center justify-between py-2">
+        <span class="text-sm font-medium">${score.dimension}</span>
+        <div class="flex items-center gap-2">
+          <div class="w-20 bg-gray-200 rounded-full h-2">
+            <div class="${color} h-2 rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
+          </div>
+          <span class="text-sm font-bold w-8 text-right">${score.score}</span>
+        </div>
+      </div>
+    `;
   });
 }

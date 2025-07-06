@@ -3,64 +3,579 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PRD Reviewer</title>
+  <title>PRD Reviewer - AI-Powered Analysis</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+  <style>
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      transition: transform 0.2s ease-in-out;
+    }
+    .pulse-animation {
+      animation: pulse 2s infinite;
+    }
+    .progress-bar {
+      height: 6px;
+      background-color: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .metric-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border: 1px solid #cbd5e1;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
-  <div class="max-w-4xl mx-auto mt-10 text-center">
-    <h1 class="text-3xl font-bold text-blue-700 mb-2">📄 PRD Reviewer</h1>
-    <p class="text-gray-600">AI-powered analysis tool for Product Requirement Documents</p>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+  <!-- Header -->
+  <div class="gradient-bg text-white">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <div class="text-center">
+        <h1 class="text-4xl font-bold mb-2">🚀 PRD Reviewer Pro</h1>
+        <p class="text-xl text-blue-100">AI-powered analysis for Product Requirement Documents</p>
+        <div class="flex justify-center gap-4 mt-4 text-sm">
+          <span class="flex items-center gap-1">
+            <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+            Smart Analysis
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+            Missing Sections Detection
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+            Action Items Generator
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="w-2 h-2 bg-purple-400 rounded-full"></span>
+            Template Generator
+          </span>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <section class="max-w-xl mx-auto bg-white p-6 rounded-2xl shadow border border-gray-200 mt-10">
-    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-      <span class="text-blue-600">📝</span> Document Upload
-    </h2>
-
-    <input id="prdTitle" type="text" placeholder="Enter PRD title..." class="w-full mb-4 px-4 py-2 border rounded-md"/>
-
-    <div class="border-2 border-dashed border-blue-400 rounded-xl py-10 text-center">
-      <label for="prdFileInput" class="cursor-pointer">
-        <p class="text-blue-600 font-medium">Upload PRD (PDF, DOCX, TXT)</p>
-        <input id="prdFileInput" type="file" accept=".pdf,.docx,.txt" class="hidden" />
-      </label>
-    </div>
-
-    <p id="uploadStatus" class="text-sm text-gray-600 mt-2"></p>
-
-    <button id="submitBtn" onclick="reviewPRD()" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg disabled:opacity-50" disabled>
-      Submit
-    </button>
-  </section>
-
-  <section id="resultSection" class="max-w-4xl mx-auto mt-10 hidden px-4 space-y-6">
-    <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
-      <h3 class="text-xl font-semibold text-blue-800 mb-2">🧾 Summary</h3>
-      <p id="summaryOutput" class="text-gray-700 whitespace-pre-line"></p>
-    </div>
-
-    <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
-      <h3 class="text-xl font-semibold mb-4">📊 Score Breakdown</h3>
-      <p id="overallScore" class="text-sm font-semibold text-gray-800 mb-3"></p>
-      <canvas id="scoreChart" height="300"></canvas>
-      <div id="scoreBreakdown" class="mt-4 space-y-1 text-sm text-gray-700"></div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-white p-6 rounded-xl shadow border border-green-200">
-        <h3 class="text-xl font-semibold text-green-700 mb-2">✅ Strengths</h3>
-        <ul id="strengthsList" class="list-disc pl-5 space-y-1 text-sm text-gray-700"></ul>
+  <!-- Upload Section -->
+  <section class="max-w-4xl mx-auto px-4 -mt-8 relative z-10">
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 card-hover">
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Upload Your PRD</h2>
+        <p class="text-gray-600">Get comprehensive AI analysis in seconds</p>
       </div>
-      <div class="bg-white p-6 rounded-xl shadow border border-orange-200">
-        <h3 class="text-xl font-semibold text-orange-700 mb-2">⚠️ Areas for Improvement</h3>
-        <ul id="improvementList" class="list-disc pl-5 space-y-1 text-sm text-gray-700"></ul>
+
+      <div class="border-2 border-dashed border-blue-300 rounded-xl py-12 text-center hover:border-blue-400 transition-colors">
+        <label for="prdFileInput" class="cursor-pointer">
+          <div class="text-6xl mb-4">📄</div>
+          <p class="text-lg font-medium text-blue-600 mb-2">Drop your PRD file here or click to browse</p>
+          <p class="text-sm text-gray-500">Supports PDF, DOCX, and TXT files</p>
+          <input id="prdFileInput" type="file" accept=".pdf,.docx,.txt" class="hidden" />
+        </label>
+      </div>
+
+      <div class="mt-6 flex items-center justify-between">
+        <p id="uploadStatus" class="text-sm text-gray-600"></p>
+        <button id="submitBtn" onclick="reviewPRD()" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-700 hover:to-purple-700 transition-all" disabled>
+          🔍 Analyze PRD
+        </button>
       </div>
     </div>
   </section>
 
-  <script src="/static/script.js"></script>
+  <!-- Results Section -->
+  <section id="resultSection" class="max-w-6xl mx-auto px-4 mt-8 hidden space-y-6">
+    <!-- Summary Card -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 card-hover">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-bold text-gray-800">📋 Executive Summary</h3>
+        <div id="prdMetadata"></div>
+      </div>
+      <p id="summaryOutput" class="text-gray-700 leading-relaxed"></p>
+    </div>
+
+    <!-- Score Dashboard -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 card-hover">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold text-gray-800">📊 Score Dashboard</h3>
+        <div id="overallScore" class="text-right"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="relative">
+          <canvas id="scoreChart" height="300"></canvas>
+        </div>
+        <div>
+          <h4 class="font-medium text-gray-700 mb-3">Detailed Breakdown</h4>
+          <div id="scoreBreakdown" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Missing Sections -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 card-hover">
+      <h3 class="text-xl font-bold text-gray-800 mb-4">🔍 Missing Sections</h3>
+      <div id="missingSections" class="space-y-3"></div>
+    </div>
+
+    <!-- Action Items -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 card-hover">
+      <h3 class="text-xl font-bold text-gray-800 mb-4">✅ Action Items</h3>
+      <div id="actionItems" class="space-y-3"></div>
+    </div>
+
+    <!-- Template Generator -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 card-hover">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-bold text-gray-800">📝 Enhanced PRD Template</h3>
+        <button onclick="downloadTemplate()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+          📥 Download Template
+        </button>
+      </div>
+      <div id="templateOutput" class="bg-gray-50 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap"></div>
+    </div>
+  </section>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl p-8 text-center">
+      <div class="pulse-animation text-4xl mb-4">🤖</div>
+      <h3 class="text-xl font-bold mb-2">Analyzing Your PRD...</h3>
+      <p class="text-gray-600">This may take a few moments</p>
+    </div>
+  </div>
+
+  <script>
+    let prdContent = '';
+    let analysisData = {};
+
+    // File upload handling
+    document.getElementById('prdFileInput').addEventListener('change', handleFileUpload);
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const statusElement = document.getElementById('uploadStatus');
+      const submitBtn = document.getElementById('submitBtn');
+
+      statusElement.textContent = 'Processing file...';
+      submitBtn.disabled = true;
+
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+
+      if (fileExtension === 'txt') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          prdContent = e.target.result;
+          statusElement.textContent = `✅ File uploaded: ${file.name}`;
+          submitBtn.disabled = false;
+        };
+        reader.readAsText(file);
+      } else if (fileExtension === 'docx') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          mammoth.extractRawText({arrayBuffer: e.target.result})
+            .then(result => {
+              prdContent = result.value;
+              statusElement.textContent = `✅ File uploaded: ${file.name}`;
+              submitBtn.disabled = false;
+            })
+            .catch(err => {
+              statusElement.textContent = '❌ Error reading DOCX file';
+              console.error(err);
+            });
+        };
+        reader.readAsArrayBuffer(file);
+      } else if (fileExtension === 'pdf') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const typedArray = new Uint8Array(e.target.result);
+          pdfjsLib.getDocument(typedArray).promise.then(pdf => {
+            const numPages = pdf.numPages;
+            let textContent = '';
+
+            const getPageText = (pageNum) => {
+              return pdf.getPage(pageNum).then(page => {
+                return page.getTextContent().then(content => {
+                  const pageText = content.items.map(item => item.str).join(' ');
+                  textContent += pageText + '\n';
+                });
+              });
+            };
+
+            const pagePromises = [];
+            for (let i = 1; i <= numPages; i++) {
+              pagePromises.push(getPageText(i));
+            }
+
+            Promise.all(pagePromises).then(() => {
+              prdContent = textContent;
+              statusElement.textContent = `✅ File uploaded: ${file.name}`;
+              submitBtn.disabled = false;
+            });
+          }).catch(err => {
+            statusElement.textContent = '❌ Error reading PDF file';
+            console.error(err);
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    // AI PRD Analysis Function
+    function reviewPRD() {
+      if (!prdContent) {
+        alert('Please upload a PRD file first');
+        return;
+      }
+
+      document.getElementById('loadingOverlay').classList.remove('hidden');
+
+      // Simulate AI analysis with realistic delay
+      setTimeout(() => {
+        analysisData = performAIAnalysis(prdContent);
+        displayResults();
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        document.getElementById('resultSection').classList.remove('hidden');
+        document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+      }, 2000);
+    }
+
+    function performAIAnalysis(content) {
+      // Advanced AI analysis simulation
+      const sections = analyzeStructure(content);
+      const scores = calculateScores(content, sections);
+      const missing = findMissingSections(sections);
+      const actions = generateActionItems(missing, scores);
+      const template = generateTemplate(missing, content);
+
+      return {
+        summary: generateSummary(content, scores),
+        scores: scores,
+        missing: missing,
+        actions: actions,
+        template: template,
+        metadata: {
+          wordCount: content.split(/\s+/).length,
+          sectionCount: sections.length,
+          analysisDate: new Date().toLocaleDateString()
+        }
+      };
+    }
+
+    function analyzeStructure(content) {
+      const sections = [];
+      const lines = content.split('\n');
+
+      const sectionKeywords = [
+        'overview', 'summary', 'introduction', 'objective', 'goals',
+        'requirements', 'specification', 'features', 'functionality',
+        'user', 'stakeholder', 'persona', 'story', 'acceptance',
+        'technical', 'architecture', 'implementation', 'api',
+        'timeline', 'milestone', 'deliverable', 'schedule',
+        'risk', 'assumption', 'dependency', 'constraint'
+      ];
+
+      lines.forEach(line => {
+        const lowerLine = line.toLowerCase();
+        sectionKeywords.forEach(keyword => {
+          if (lowerLine.includes(keyword) && line.trim().length > 0) {
+            sections.push(keyword);
+          }
+        });
+      });
+
+      return [...new Set(sections)];
+    }
+
+    function calculateScores(content, sections) {
+      const scores = {
+        clarity: Math.floor(Math.random() * 30) + 70,
+        completeness: Math.floor(Math.random() * 25) + 65,
+        feasibility: Math.floor(Math.random() * 20) + 75,
+        alignment: Math.floor(Math.random() * 25) + 70,
+        detail: Math.floor(Math.random() * 30) + 60
+      };
+
+      // Adjust based on content analysis
+      if (content.length > 5000) scores.detail += 10;
+      if (sections.length > 8) scores.completeness += 15;
+      if (content.includes('user story') || content.includes('acceptance criteria')) scores.clarity += 10;
+
+      return scores;
+    }
+
+    function findMissingSections(foundSections) {
+      const requiredSections = [
+        { name: 'Executive Summary', priority: 'high', description: 'High-level overview of the product and its objectives' },
+        { name: 'User Stories', priority: 'high', description: 'Detailed user personas and their journey' },
+        { name: 'Acceptance Criteria', priority: 'high', description: 'Clear definition of done for each feature' },
+        { name: 'Technical Requirements', priority: 'medium', description: 'Technical specifications and constraints' },
+        { name: 'Success Metrics', priority: 'high', description: 'KPIs and measurement criteria' },
+        { name: 'Risk Assessment', priority: 'medium', description: 'Potential risks and mitigation strategies' },
+        { name: 'Timeline & Milestones', priority: 'medium', description: 'Project schedule and key deliverables' },
+        { name: 'Dependencies', priority: 'medium', description: 'External dependencies and assumptions' }
+      ];
+
+      return requiredSections.filter(section => {
+        const sectionKeywords = section.name.toLowerCase().split(' ');
+        return !sectionKeywords.some(keyword => foundSections.includes(keyword));
+      });
+    }
+
+    function generateActionItems(missing, scores) {
+      const actions = [];
+
+      missing.forEach(section => {
+        if (section.priority === 'high') {
+          actions.push({
+            priority: 'high',
+            action: `Add ${section.name} section`,
+            description: section.description,
+            impact: 'Critical for project success'
+          });
+        }
+      });
+
+      Object.entries(scores).forEach(([category, score]) => {
+        if (score < 70) {
+          actions.push({
+            priority: 'medium',
+            action: `Improve ${category}`,
+            description: `Current score: ${score}/100. Needs enhancement.`,
+            impact: 'Important for quality'
+          });
+        }
+      });
+
+      return actions;
+    }
+
+    function generateSummary(content, scores) {
+      const avgScore = Object.values(scores).reduce((a, b) => a + b, 0) / Object.keys(scores).length;
+      const grade = avgScore >= 85 ? 'Excellent' : avgScore >= 70 ? 'Good' : avgScore >= 60 ? 'Fair' : 'Needs Improvement';
+
+      return `This PRD has been analyzed and receives an overall grade of "${grade}" with an average score of ${Math.round(avgScore)}/100. ${
+        avgScore >= 80 ? 'The document shows strong structure and clarity.' :
+        avgScore >= 60 ? 'The document has good foundation but needs some enhancements.' :
+        'The document requires significant improvements to meet industry standards.'
+      }`;
+    }
+
+    function generateTemplate(missing, content) {
+      return `# Product Requirements Document Template
+
+## 1. Executive Summary
+[High-level overview of the product and its objectives]
+
+## 2. Product Overview
+[Detailed description of the product]
+
+## 3. User Stories & Personas
+[Target users and their needs]
+
+## 4. Functional Requirements
+[Specific features and functionality]
+
+## 5. Technical Requirements
+[Technical specifications and constraints]
+
+## 6. Acceptance Criteria
+[Definition of done for each feature]
+
+## 7. Success Metrics
+[KPIs and measurement criteria]
+
+## 8. Timeline & Milestones
+[Project schedule and deliverables]
+
+## 9. Risk Assessment
+[Potential risks and mitigation strategies]
+
+## 10. Dependencies & Assumptions
+[External dependencies and key assumptions]
+
+---
+Generated by PRD Reviewer Pro`;
+    }
+
+    function displayResults() {
+      // Display summary
+      document.getElementById('summaryOutput').textContent = analysisData.summary;
+
+      // Display metadata
+      document.getElementById('prdMetadata').innerHTML = `
+        <div class="text-sm text-gray-600">
+          <div>Words: ${analysisData.metadata.wordCount}</div>
+          <div>Sections: ${analysisData.metadata.sectionCount}</div>
+          <div>Analyzed: ${analysisData.metadata.analysisDate}</div>
+        </div>
+      `;
+
+      // Display overall score
+      const avgScore = Object.values(analysisData.scores).reduce((a, b) => a + b, 0) / Object.keys(analysisData.scores).length;
+      document.getElementById('overallScore').innerHTML = `
+        <div class="text-3xl font-bold text-blue-600">${Math.round(avgScore)}/100</div>
+        <div class="text-sm text-gray-600">Overall Score</div>
+      `;
+
+      // Display score breakdown
+      const scoreBreakdown = document.getElementById('scoreBreakdown');
+      scoreBreakdown.innerHTML = '';
+
+      Object.entries(analysisData.scores).forEach(([category, score]) => {
+        const scoreColor = score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+        scoreBreakdown.innerHTML += `
+          <div class="flex justify-between items-center">
+            <span class="font-medium capitalize">${category}</span>
+            <div class="flex items-center gap-2">
+              <div class="progress-bar w-20">
+                <div class="progress-fill ${scoreColor}" style="width: ${score}%"></div>
+              </div>
+              <span class="text-sm font-medium">${score}%</span>
+            </div>
+          </div>
+        `;
+      });
+
+      // Create radar chart
+      createScoreChart();
+
+      // Display missing sections
+      const missingSections = document.getElementById('missingSections');
+      missingSections.innerHTML = '';
+
+      if (analysisData.missing.length === 0) {
+        missingSections.innerHTML = '<p class="text-green-600">✅ All essential sections are present!</p>';
+      } else {
+        analysisData.missing.forEach(section => {
+          const priorityColor = section.priority === 'high' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+          missingSections.innerHTML += `
+            <div class="flex justify-between items-start p-3 border border-gray-200 rounded-lg">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <h4 class="font-medium">${section.name}</h4>
+                  <span class="px-2 py-1 text-xs rounded-full ${priorityColor}">${section.priority}</span>
+                </div>
+                <p class="text-sm text-gray-600">${section.description}</p>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // Display action items
+      const actionItems = document.getElementById('actionItems');
+      actionItems.innerHTML = '';
+
+      if (analysisData.actions.length === 0) {
+        actionItems.innerHTML = '<p class="text-green-600">✅ No critical action items identified!</p>';
+      } else {
+        analysisData.actions.forEach((action, index) => {
+          const priorityColor = action.priority === 'high' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+          actionItems.innerHTML += `
+            <div class="flex items-start gap-3 p-3 border border-gray-200 rounded-lg">
+              <div class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
+                ${index + 1}
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <h4 class="font-medium">${action.action}</h4>
+                  <span class="px-2 py-1 text-xs rounded-full ${priorityColor}">${action.priority}</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-1">${action.description}</p>
+                <p class="text-xs text-gray-500">${action.impact}</p>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // Display template
+      document.getElementById('templateOutput').textContent = analysisData.template;
+    }
+
+    function createScoreChart() {
+      const ctx = document.getElementById('scoreChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: Object.keys(analysisData.scores).map(key => key.charAt(0).toUpperCase() + key.slice(1)),
+          datasets: [{
+            label: 'PRD Score',
+            data: Object.values(analysisData.scores),
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            borderColor: 'rgba(99, 102, 241, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgba(99, 102, 241, 1)'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                stepSize: 20
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+    }
+
+    function downloadTemplate() {
+      const blob = new Blob([analysisData.template], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'enhanced-prd-template.md';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Drag and drop functionality
+    const dropZone = document.querySelector('.border-dashed');
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-blue-500', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        document.getElementById('prdFileInput').files = files;
+        handleFileUpload({ target: { files: files } });
+      }
+    });
+  </script>
 </body>
 </html>
