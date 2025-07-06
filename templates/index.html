@@ -25,13 +25,13 @@
     <div class="border-2 border-dashed border-blue-400 rounded-xl py-10 text-center">
       <label for="prdFileInput" class="cursor-pointer">
         <p class="text-blue-600 font-medium">Upload PRD (PDF, DOCX, TXT)</p>
-        <input id="prdFileInput" type="file" class="hidden" />
+        <input id="prdFileInput" type="file" accept=".pdf,.docx,.txt" class="hidden" />
       </label>
     </div>
 
     <p id="uploadStatus" class="text-sm text-gray-600 mt-2"></p>
 
-    <button id="submitBtn" onclick="reviewPRD()" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg disabled:opacity-50">
+    <button id="submitBtn" onclick="reviewPRD()" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg disabled:opacity-50" disabled>
       Submit
     </button>
   </section>

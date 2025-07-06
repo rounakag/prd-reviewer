@@ -58,49 +58,83 @@ async function reviewPRD() {
   uploadStatus.textContent = "Analyzing...";
   submitBtn.disabled = true;
 
-  const response = await fetch("/review", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prd_text: prdText }),
-  });
+  try {
+    const response = await fetch("/review", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prd_text: prdText }),
+    });
 
-  const data = await response.json();
-  const parsed = data.response;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-  if (!parsed || !parsed.summary || !parsed.scores) {
-    uploadStatus.textContent = "⚠️ Invalid response from AI";
-    console.error("Invalid JSON structure", parsed);
-    return;
+    const data = await response.json();
+    let responseText = data.response;
+
+    console.log("Raw response:", responseText);
+
+    // Clean markdown code blocks if present
+    if (responseText.includes('```json')) {
+      responseText = responseText.replace(/```json\n?/g, '').replace(/\n?```/g, '').trim();
+    }
+
+    // Parse the cleaned JSON
+    let parsed;
+    try {
+      parsed = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError);
+      console.error("Cleaned response:", responseText);
+      uploadStatus.textContent = "⚠️ Invalid JSON response from AI";
+      submitBtn.disabled = false;
+      return;
+    }
+
+    // Validate the parsed response
+    if (!parsed || !parsed.summary || !parsed.scores) {
+      uploadStatus.textContent = "⚠️ Invalid response structure from AI";
+      submitBtn.disabled = false;
+      return;
+    }
+
+    // Display results
+    document.getElementById("resultSection").classList.remove("hidden");
+    uploadStatus.textContent = "Analysis complete.";
+
+    const scores = [
+      { dimension: "Clarity", score: parsed.scores.clarity },
+      { dimension: "Structure", score: parsed.scores.structure },
+      { dimension: "Completeness", score: parsed.scores.completeness },
+      { dimension: "Ambiguity", score: parsed.scores.ambiguity },
+      { dimension: "Stakeholder Consideration", score: parsed.scores.stakeholder_consideration },
+      { dimension: "Technical Depth", score: parsed.scores.technical_depth },
+      { dimension: "Feasibility", score: parsed.scores.feasibility },
+      { dimension: "Business Impact Alignment", score: parsed.scores.business_impact_alignment }
+    ].map(s => ({ ...s, fullMark: 10 }));
+
+    renderChart(scores);
+    renderBreakdown(scores);
+
+    const avg = (scores.reduce((sum, s) => sum + s.score, 0) / scores.length).toFixed(1);
+    document.getElementById("overallScore").textContent = `🧮 Overall Score: ${avg}/10`;
+    document.getElementById("summaryOutput").innerText = parsed.summary;
+
+    document.getElementById("strengthsList").innerHTML = parsed.strengths && parsed.strengths.length
+      ? parsed.strengths.map(s => `<li style="color: #22c55e">${s}</li>`).join("")
+      : "<li>No strengths found</li>";
+
+    document.getElementById("improvementList").innerHTML = parsed.areas_for_improvement && parsed.areas_for_improvement.length
+      ? parsed.areas_for_improvement.map(p => `<li style="color: #f59e0b">${p}</li>`).join("")
+      : "<li>No improvements found</li>";
+
+    submitBtn.disabled = false;
+
+  } catch (error) {
+    console.error("Error:", error);
+    uploadStatus.textContent = "⚠️ Error analyzing PRD";
+    submitBtn.disabled = false;
   }
-
-  document.getElementById("resultSection").classList.remove("hidden");
-  uploadStatus.textContent = "Analysis complete.";
-
-  const scores = [
-    { dimension: "Clarity", score: parsed.scores.clarity },
-    { dimension: "Structure", score: parsed.scores.structure },
-    { dimension: "Completeness", score: parsed.scores.completeness },
-    { dimension: "Ambiguity", score: parsed.scores.ambiguity },
-    { dimension: "Stakeholder Consideration", score: parsed.scores.stakeholder_consideration },
-    { dimension: "Technical Depth", score: parsed.scores.technical_depth },
-    { dimension: "Feasibility", score: parsed.scores.feasibility },
-    { dimension: "Business Impact Alignment", score: parsed.scores.business_impact_alignment }
-  ].map(s => ({ ...s, fullMark: 10 }));
-
-  renderChart(scores);
-  renderBreakdown(scores);
-
-  const avg = (scores.reduce((sum, s) => sum + s.score, 0) / scores.length).toFixed(1);
-  document.getElementById("overallScore").textContent = `🧮 Overall Score: ${avg}/10`;
-  document.getElementById("summaryOutput").innerText = parsed.summary;
-
-  document.getElementById("strengthsList").innerHTML = parsed.strengths.length
-    ? parsed.strengths.map(s => `<li style="color: #22c55e">${s}</li>`).join("")
-    : "<li>No strengths found</li>";
-
-  document.getElementById("improvementList").innerHTML = parsed.areas_for_improvement.length
-    ? parsed.areas_for_improvement.map(p => `<li style="color: #f59e0b">${p}</li>`).join("")
-    : "<li>No improvements found</li>";
 }
 
 function renderChart(scores) {
