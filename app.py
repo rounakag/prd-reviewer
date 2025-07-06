@@ -33,35 +33,38 @@ def review():
             return jsonify({"response": "❌ No PRD text provided."}), 400
 
         prompt = f"""
-You are an expert PRD reviewer. Score the following PRD strictly between 0 and 10 on each parameter. Do not exceed 10.
+        You are an expert PRD reviewer. Strictly follow the format below.
 
-Respond like this:
+        Return all scores as numbers from 0 to 10 only. Use this exact structure and headings — do not change them. Fill every field.
 
-**1. Summary:**  
-[Short one-paragraph summary]
+        ===
+        **1. Summary:**  
+        [Short one-paragraph summary]
 
-**2. Scores:**  
-Clarity:  
-Structure:  
-Completeness:  
-Ambiguity:  
-Stakeholder Consideration:  
-Technical Depth:  
-Feasibility:  
-Business Impact Alignment:  
+        **2. Scores:**  
+        Clarity: [0-10]  
+        Structure: [0-10]  
+        Completeness: [0-10]  
+        Ambiguity: [0-10]  
+        Stakeholder Consideration: [0-10]  
+        Technical Depth: [0-10]  
+        Feasibility: [0-10]  
+        Business Impact Alignment: [0-10]
 
-**3. Strengths:**  
-- Bullet 1  
-- Bullet 2  
+        **3. Strengths:**  
+        - Bullet point 1  
+        - Bullet point 2  
 
-**4. Areas for Improvement:**  
-- Bullet 1  
-- Bullet 2  
+        **4. Areas for Improvement:**  
+        - Bullet point 1  
+        - Bullet point 2  
+        ===
 
-PRD:
-\"\"\"
-{prd_text}
-\"\"\"
+        Now analyze the PRD below accordingly:
+
+        \"\"\"
+        {prd_text}
+        \"\"\"
         """
 
         response = model.generate_content(prompt)
