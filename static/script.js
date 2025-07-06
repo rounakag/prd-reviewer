@@ -65,17 +65,16 @@ async function reviewPRD() {
   });
 
   const data = await response.json();
+  const parsed = data.response;
 
-  let parsed;
-  try {
-    parsed = typeof data.response === "string" ? JSON.parse(data.response) : data.response;
-  } catch (e) {
-    console.error("Invalid JSON from Gemini", data.response);
+  if (!parsed || !parsed.summary || !parsed.scores) {
     uploadStatus.textContent = "⚠️ Invalid response from AI";
+    console.error("Invalid JSON structure", parsed);
     return;
   }
 
   document.getElementById("resultSection").classList.remove("hidden");
+  uploadStatus.textContent = "Analysis complete.";
 
   const scores = [
     { dimension: "Clarity", score: parsed.scores.clarity },
@@ -93,13 +92,15 @@ async function reviewPRD() {
 
   const avg = (scores.reduce((sum, s) => sum + s.score, 0) / scores.length).toFixed(1);
   document.getElementById("overallScore").textContent = `🧮 Overall Score: ${avg}/10`;
+  document.getElementById("summaryOutput").innerText = parsed.summary;
 
-  document.getElementById("summaryOutput").innerText = parsed.summary || "Not available";
-  document.getElementById("strengthsList").innerHTML = formatBullets(parsed.strengths.join("\n"), "green");
-  document.getElementById("improvementList").innerHTML = formatBullets(parsed.areas_for_improvement.join("\n"), "amber");
+  document.getElementById("strengthsList").innerHTML = parsed.strengths.length
+    ? parsed.strengths.map(s => `<li style="color: #22c55e">${s}</li>`).join("")
+    : "<li>No strengths found</li>";
 
-  uploadStatus.textContent = "✅ Analysis complete.";
-  submitBtn.disabled = false;
+  document.getElementById("improvementList").innerHTML = parsed.areas_for_improvement.length
+    ? parsed.areas_for_improvement.map(p => `<li style="color: #f59e0b">${p}</li>`).join("")
+    : "<li>No improvements found</li>";
 }
 
 function renderChart(scores) {
@@ -136,12 +137,4 @@ function renderBreakdown(scores) {
     const emoji = score.score >= 8 ? "🔥" : score.score >= 5 ? "⚠️" : "❌";
     breakdown.innerHTML += `<div>${emoji} <strong>${score.dimension}</strong>: ${score.score}/10</div>`;
   });
-}
-
-function formatBullets(text, color) {
-  const bulletColor = color === "green" ? "#22c55e" : "#f59e0b";
-  return text.trim().split("\n").map(line => {
-    line = line.replace(/^[-•*]\s*/, "").trim();
-    return `<li style="color: ${bulletColor}">${line}</li>`;
-  }).join("");
 }
