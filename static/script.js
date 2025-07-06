@@ -65,50 +65,46 @@ async function reviewPRD() {
   });
 
   const data = await response.json();
-  const text = data?.response || "No valid response";
 
-  document.getElementById("resultSection").classList.remove("hidden");
-  uploadStatus.textContent = "Analysis complete.";
+  try {
+    const result = JSON.parse(data.response);
 
-  const scores = extractScores(text);
-  renderChart(scores);
-  renderBreakdown(scores);
+    document.getElementById("resultSection").classList.remove("hidden");
+    uploadStatus.textContent = "Analysis complete.";
 
-  const avg = (scores.reduce((sum, s) => sum + s.score, 0) / scores.length).toFixed(1);
-  document.getElementById("overallScore").textContent = `🧮 Overall Score: ${avg}/10`;
+    document.getElementById("summaryOutput").innerText = result.summary || "No summary";
 
-  const summaryMatch = text.match(/\*\*1\. Summary:\*\*\s*(.*?)(?=\n\s*\*\*2\.|$)/s);
-  document.getElementById("summaryOutput").innerText = summaryMatch ? summaryMatch[1].trim() : "Not available";
+    // Score processing
+    const scoreFields = [
+      "clarity", "structure", "completeness", "ambiguity",
+      "stakeholder_consideration", "technical_depth", "feasibility", "business_impact_alignment"
+    ];
 
-  const saMatch = text.match(/\*\*3\. Strengths and Areas for Improvement:\*\*([\s\S]*)/);
-  if (saMatch) {
-    const saText = saMatch[1];
-    const strengths = saText.match(/\*\*Strengths:\*\*\s*([\s\S]*?)\*\*Areas for Improvement:\*\*/);
-    const improvements = saText.match(/\*\*Areas for Improvement:\*\*\s*([\s\S]*)/);
+    const scores = scoreFields.map(field => ({
+      dimension: toTitleCase(field.replace(/_/g, " ")),
+      score: result.scores[field],
+      fullMark: 10,
+    }));
 
-    document.getElementById("strengthsList").innerHTML = strengths
-      ? formatBullets(strengths[1], "green")
-      : "<li>No strengths found</li>";
-    document.getElementById("improvementList").innerHTML = improvements
-      ? formatBullets(improvements[1], "amber")
-      : "<li>No improvements found</li>";
+    renderChart(scores);
+    renderBreakdown(scores);
+
+    const avg = (scores.reduce((sum, s) => sum + s.score, 0) / scores.length).toFixed(1);
+    document.getElementById("overallScore").textContent = `🧮 Overall Score: ${avg}/10`;
+
+    document.getElementById("strengthsList").innerHTML = (result.strengths || []).map(s =>
+      `<li style="color: #22c55e">${s}</li>`
+    ).join("");
+
+    document.getElementById("improvementList").innerHTML = (result.areas_for_improvement || []).map(s =>
+      `<li style="color: #f59e0b">${s}</li>`
+    ).join("");
+  } catch (e) {
+    console.error("Invalid JSON from Gemini", data.response);
+    uploadStatus.textContent = "⚠️ Invalid response from AI.";
   }
-}
 
-function extractScores(text) {
-  const metrics = [
-    "Clarity", "Structure", "Completeness", "Ambiguity",
-    "Stakeholder Consideration", "Technical Depth", "Feasibility", "Business Impact Alignment"
-  ];
-  return metrics.map(metric => {
-    const regex = new RegExp(`\\*\\*${metric}:\\*\\*\\s*(\\d)`, "i");
-    const match = text.match(regex);
-    return {
-      dimension: metric,
-      score: match ? parseFloat(match[1]) * 2 : 0,
-      fullMark: 10
-    };
-  });
+  submitBtn.disabled = false;
 }
 
 function renderChart(scores) {
@@ -147,10 +143,6 @@ function renderBreakdown(scores) {
   });
 }
 
-function formatBullets(text, color) {
-  const bulletColor = color === "green" ? "#22c55e" : "#f59e0b";
-  return text.trim().split("\n").map(line => {
-    line = line.replace(/^[-•*]\s*/, "").trim();
-    return `<li style="color: ${bulletColor}">${line}</li>`;
-  }).join("");
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }

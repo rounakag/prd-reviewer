@@ -33,35 +33,31 @@ def review():
             return jsonify({"response": "❌ No PRD text provided."}), 400
 
         prompt = f"""
-        You are an expert PRD reviewer. Strictly follow the format below.
+        You are a senior product reviewer AI. Analyze the PRD below and respond **only** in the following JSON format:
 
-        Return all scores as numbers from 0 to 10 only. Use this exact structure and headings — do not change them. Fill every field.
+        {{
+          "summary": "one-paragraph summary here",
+          "scores": {{
+            "clarity": number between 0 and 10,
+            "structure": number between 0 and 10,
+            "completeness": number between 0 and 10,
+            "ambiguity": number between 0 and 10,
+            "stakeholder_consideration": number between 0 and 10,
+            "technical_depth": number between 0 and 10,
+            "feasibility": number between 0 and 10,
+            "business_impact_alignment": number between 0 and 10
+          }},
+          "strengths": ["point 1", "point 2"],
+          "areas_for_improvement": ["point 1", "point 2"]
+        }}
 
-        ===
-        **1. Summary:**  
-        [Short one-paragraph summary]
+        Rules:
+        - Respond with valid JSON only.
+        - All fields are mandatory.
+        - Each score must be between 0 and 10.
+        - Do not write anything outside the JSON.
 
-        **2. Scores:**  
-        Clarity: [0-10]  
-        Structure: [0-10]  
-        Completeness: [0-10]  
-        Ambiguity: [0-10]  
-        Stakeholder Consideration: [0-10]  
-        Technical Depth: [0-10]  
-        Feasibility: [0-10]  
-        Business Impact Alignment: [0-10]
-
-        **3. Strengths:**  
-        - Bullet point 1  
-        - Bullet point 2  
-
-        **4. Areas for Improvement:**  
-        - Bullet point 1  
-        - Bullet point 2  
-        ===
-
-        Now analyze the PRD below accordingly:
-
+        PRD:
         \"\"\"
         {prd_text}
         \"\"\"
