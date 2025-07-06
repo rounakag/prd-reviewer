@@ -10,11 +10,7 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
 
 # Configure Gemini
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY not set in environment variables.")
-
-genai.configure(api_key=GEMINI_API_KEY)
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-pro")
 
 @app.route("/")
@@ -28,7 +24,7 @@ def review():
         prd_text = data.get("prd_text", "").strip()
 
         if not prd_text:
-            return jsonify({"response": "No PRD text provided."}), 400
+            return jsonify({"response": "❌ No PRD text provided."}), 400
 
         prompt = f"""
 You are a senior product reviewer AI. Analyze the PRD below and respond in this format:
@@ -63,10 +59,16 @@ PRD:
 
         response = model.generate_content(prompt)
 
-        if hasattr(response, "text") and response.text:
+        # ✅ Log full Gemini response for debugging
+        print("🔍 Gemini Raw Response:\n", response)
+
+        if response and hasattr(response, "text") and response.text:
+            print("✅ Gemini Final Text:\n", response.text)
             return jsonify({"response": response.text})
         else:
-            return jsonify({"response": "No response generated from Gemini."}), 500
+            print("❌ Empty response from Gemini")
+            return jsonify({"response": "❌ No response generated from Gemini."}), 500
 
     except Exception as e:
-        return jsonify({"response": f"Error occurred: {str(e)}"}), 500
+        print(f"🔥 Exception: {str(e)}")
+        return jsonify({"response": f"❌ Error occurred: {str(e)}"}), 500
