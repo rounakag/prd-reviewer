@@ -66,44 +66,39 @@ async function reviewPRD() {
 
   const data = await response.json();
 
+  let parsed;
   try {
-    const result = JSON.parse(data.response);
-
-    document.getElementById("resultSection").classList.remove("hidden");
-    uploadStatus.textContent = "Analysis complete.";
-
-    document.getElementById("summaryOutput").innerText = result.summary || "No summary";
-
-    // Score processing
-    const scoreFields = [
-      "clarity", "structure", "completeness", "ambiguity",
-      "stakeholder_consideration", "technical_depth", "feasibility", "business_impact_alignment"
-    ];
-
-    const scores = scoreFields.map(field => ({
-      dimension: toTitleCase(field.replace(/_/g, " ")),
-      score: result.scores[field],
-      fullMark: 10,
-    }));
-
-    renderChart(scores);
-    renderBreakdown(scores);
-
-    const avg = (scores.reduce((sum, s) => sum + s.score, 0) / scores.length).toFixed(1);
-    document.getElementById("overallScore").textContent = `🧮 Overall Score: ${avg}/10`;
-
-    document.getElementById("strengthsList").innerHTML = (result.strengths || []).map(s =>
-      `<li style="color: #22c55e">${s}</li>`
-    ).join("");
-
-    document.getElementById("improvementList").innerHTML = (result.areas_for_improvement || []).map(s =>
-      `<li style="color: #f59e0b">${s}</li>`
-    ).join("");
+    parsed = typeof data.response === "string" ? JSON.parse(data.response) : data.response;
   } catch (e) {
     console.error("Invalid JSON from Gemini", data.response);
-    uploadStatus.textContent = "⚠️ Invalid response from AI.";
+    uploadStatus.textContent = "⚠️ Invalid response from AI";
+    return;
   }
 
+  document.getElementById("resultSection").classList.remove("hidden");
+
+  const scores = [
+    { dimension: "Clarity", score: parsed.scores.clarity },
+    { dimension: "Structure", score: parsed.scores.structure },
+    { dimension: "Completeness", score: parsed.scores.completeness },
+    { dimension: "Ambiguity", score: parsed.scores.ambiguity },
+    { dimension: "Stakeholder Consideration", score: parsed.scores.stakeholder_consideration },
+    { dimension: "Technical Depth", score: parsed.scores.technical_depth },
+    { dimension: "Feasibility", score: parsed.scores.feasibility },
+    { dimension: "Business Impact Alignment", score: parsed.scores.business_impact_alignment }
+  ].map(s => ({ ...s, fullMark: 10 }));
+
+  renderChart(scores);
+  renderBreakdown(scores);
+
+  const avg = (scores.reduce((sum, s) => sum + s.score, 0) / scores.length).toFixed(1);
+  document.getElementById("overallScore").textContent = `🧮 Overall Score: ${avg}/10`;
+
+  document.getElementById("summaryOutput").innerText = parsed.summary || "Not available";
+  document.getElementById("strengthsList").innerHTML = formatBullets(parsed.strengths.join("\n"), "green");
+  document.getElementById("improvementList").innerHTML = formatBullets(parsed.areas_for_improvement.join("\n"), "amber");
+
+  uploadStatus.textContent = "✅ Analysis complete.";
   submitBtn.disabled = false;
 }
 
@@ -143,6 +138,10 @@ function renderBreakdown(scores) {
   });
 }
 
-function toTitleCase(str) {
-  return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+function formatBullets(text, color) {
+  const bulletColor = color === "green" ? "#22c55e" : "#f59e0b";
+  return text.trim().split("\n").map(line => {
+    line = line.replace(/^[-•*]\s*/, "").trim();
+    return `<li style="color: ${bulletColor}">${line}</li>`;
+  }).join("");
 }
